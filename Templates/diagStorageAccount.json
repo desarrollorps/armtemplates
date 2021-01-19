@@ -1,0 +1,47 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {    
+    "location": {
+      "type": "string",      
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
+    "diagStorageAccountName":{
+      "type": "string",
+      "metadata": {
+        "description": "Storage name for vm diagnostics"
+      }
+    },
+    "storageAccountType": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "metadata": {
+        "description": "Storage Account type for the VM and VM diagnostic storage"
+      },
+      "allowedValues": [
+        "Standard_LRS",
+        "Premium_LRS"
+      ]
+    }, 
+  },
+  "variables":{    
+  },
+  "resources": [
+          {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[parameters('diagStorageAccountName')]",
+      "apiVersion": "2017-06-01",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('storageAccountType')]"
+      },
+      "kind": "Storage",
+      "properties": {}
+    }
+  ],
+  "outputs": {
+    
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    
+  
+  },
+  "variables": {
+      /*Templates*/
+      "diagsStorageTemplate":"uri",
+      "rpsvmTemplate":"uri",
+      "nsgTemplate":"uri",
+      /*Location*/
+      "location":"[resourceGroup().location]",
+      /*Virtual machine*/
+      "virtualmachinename":"rpsvmweu",
+      "diagStorageAccountName": "[concat('diags',uniqueString(resourceGroup().id))]",  
+      /*NSG*/
+      "vmSecurityGroupName": "[concat(variables('virtualMachineName'), '-nsg')]",
+      
+  },
+  "resources": [
+    /*Network Security Group NSG*/
+    {
+      "name": "NSG",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('nsgTemplate')]"
+        },
+        "parameters": {          
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "vmSecurityGroupName":{
+              "value":"[variables('vmSecurityGroupName')]"
+          }
+        }
+      }
+    },
+    /*Storage account for vm diagnostics*/
+    {
+      "name": "diagStorageAccount",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('diagsStorageTemplate')]"
+        },
+        "parameters": {
+          "storageAccountName": {
+            "value": "[variables('diagStorageAccountName')]"
+          },
+          "location": {
+            "value": "[variables('location')]"
+          }
+        }
+      }
+    },
+    /*Network*/
+    /*Nic*/
+    /*VM*/
+  ],
+  "outputs": {}
+}

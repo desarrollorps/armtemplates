@@ -1,0 +1,152 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Default Admin username"
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Default Admin password"
+      }
+    },
+    "virtualMachineSize": {
+      "type": "string",
+      "defaultValue": "Standard_D1_v2",
+      "metadata": {
+        "description": "Virtual machine size (has to be at least the size of Standard_A3 to support 2 NICs)"
+      },
+      "allowedValues": [
+        "Standard_D1_v2",
+        "Standard_D2S_v3"
+      ]
+    },
+    
+    "diskSizeGB": {
+      "type": "int",
+       "allowedValues": [
+         64,128
+       ],
+       "defaultValue":128
+    },
+    "location": {
+      "type": "string",      
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
+    
+    "nic1Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the Nic linked with the vm"
+      }
+    },
+    "diagStorageAccountName":{
+      "type": "string",
+      "metadata": {
+        "description": "Storage name for vm diagnostics"
+      }
+    },
+    "virtualMachineName":{
+      "type": "string",
+      "defaultValue":"rpsvmweu",
+      "metadata": {
+        "description": "Virtual machine name"
+      }
+    },       
+    "pslocation": {
+      "type": "string",
+      "metadata": {
+        "description": "The base URI where artifacts required by this template are located. When the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated."
+      },
+      "defaultValue": "https://rpsutils.blob.core.windows.net/psforrps/"
+    }
+  },
+  "variables":{
+    "scriptFileName": "deployrpsvm.ps1",
+    "scriptFolder": "."
+  },
+  "resources": [
+    {
+      "name": "[parameters('virtualMachineName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2017-03-30",
+      "location": "[parameters('location')]",
+      "comments": "This is the virtual machine that you're building.",    
+      "properties": {
+        "osProfile": {
+          "computerName": "[parameters('virtualMachineName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]",
+          "windowsConfiguration": {
+            "provisionVmAgent": "true"
+          }
+        },
+        "hardwareProfile": {
+          "vmSize": "[parameters('virtualMachineSize')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2019-Datacenter",
+            "version": "latest"
+          },
+          "osDisk": {
+            "createOption": "FromImage",
+            "diskSizeGB":"[parameters('diskSizeGB')]"
+          },
+          "dataDisks": []
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "properties": {
+                "primary": true
+              },
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('nic1Name'))]"
+            }           
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts', parameters('diagStorageAccountName')), '2017-06-01').primaryEndpoints['blob']]"
+          }
+        }
+      },
+      "resources": [
+        {
+          "type": "extensions",
+          "name": "CustomScriptExtension",
+          "apiVersion": "2017-03-30",
+          "location": "[parameters('location')]",
+          "dependsOn": [
+            "[parameters('virtualMachineName')]"
+          ],        
+          "properties": {
+            "protectedSettings":{},
+            "publisher": "Microsoft.Compute",
+            "type": "CustomScriptExtension",
+            "typeHandlerVersion": "1.8",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "fileUris": [
+                "[uri(parameters('pslocation'), variables('scriptFileName'))]"
+              ],
+              "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File ', variables('scriptFolder'), '/', variables('scriptFileName'))]"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    
+  }
+}
