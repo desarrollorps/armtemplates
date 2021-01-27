@@ -1,0 +1,67 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {    
+      "location": {
+        "type": "string",      
+        "metadata": {
+          "description": "Location for all resources."
+        }
+      },
+      "nicName":{
+        "type": "string",
+        "metadata": {
+          "description": "Name of the nic"
+        }
+      },
+      "subnetid": {
+        "type": "string",
+        
+        "metadata": {
+          "description": "Subnet id where the nic will be deployed"
+        }        
+      },
+      "nsgid": {
+          "type": "string",
+        
+        "metadata": {
+          "description": "nsg id linked to the vm nic"
+        }        
+      }
+    },
+    "variables":{    
+    },
+    "resources": [
+    {
+      "name": "[parameters('nicName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2017-06-01",
+      "location": "[parameters('location')]",
+      "comments": "This will be your Primary NIC",
+      "dependsOn": [              
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "subnet": {
+                "id": "[parameters('subnetid')]"
+              },
+              "privateIPAllocationMethod": "Dynamic"
+            }
+          }
+        ],
+        "networkSecurityGroup": {
+          "id": "[parameters('nsgid')]"
+        }
+      }
+    }
+    ],
+    "outputs": {
+      "resourceID": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Network/networkInterfaces', parameters('nicName'))]"
+        }
+    }
+  }

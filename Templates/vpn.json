@@ -1,0 +1,105 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {    
+      "location": {
+        "type": "string",      
+        "metadata": {
+          "description": "Location for all resources."
+        }
+      },
+      "subnetId":{
+        "type": "string",
+        "metadata": {
+          "description": "ID for the subnet that is linked to the vpn"
+        }
+      },
+    "vpnSKU": {
+      "type": "string",      
+      "defaultValue": "BASIC",
+      "metadata": {
+        "description": "VPN SKU"
+      }
+    },
+    "vpnGeneration": {
+      "type": "string",      
+      "defaultValue": "Generation1",
+      "metadata": {
+        "description": "VPN Generation"
+      }
+    }
+    },
+    "variables":{   
+        "rgName":"[resourceGroup().name]",   
+        "publicIpVPNAddressName":"[concat(variables('rgName'),'-vpn-publicIp')]",
+        "vpnName":"vpn-gateway"
+    },
+    "resources": [
+      {
+      "name": "[variables('publicIpVPNAddressName')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2017-06-01",
+      "location": "[parameters('location')]",
+      "comments": "Public IP for your VPN",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+        }
+      },
+      {
+            "type": "Microsoft.Network/virtualNetworkGateways",
+            "apiVersion": "2019-12-01",
+            "name": "[variables('vpnName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "enablePrivateIpAddress": false,
+                "ipConfigurations": [
+                    {
+                        "name": "default",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIpAddresses', variables('publicIpVPNAddressName'))]"
+                            },
+                            "subnet": {
+                                "id": "[parameters('subnetId')]"//4
+                            }
+                        }
+                    }
+                ],
+                "sku": {
+                    "name": "[parameters('vpnSKU')]",
+                    "tier": "[parameters('vpnSKU')]"
+                },
+                "gatewayType": "Vpn",
+                "vpnType": "RouteBased",
+                "enableBgp": false,
+                "activeActive": false,
+                "vpnClientConfiguration": {
+                    "vpnClientAddressPool": {
+                        "addressPrefixes": [
+                            "172.16.10.0/24"
+                        ]
+                    },
+                    "vpnClientProtocols": [
+                        "SSTP"
+                    ],
+                    "vpnClientRootCertificates": [
+                        {
+                            "name": "P2SRootCert",
+                            "properties": {
+                                "publicCertData": "MIIC+TCCAeGgAwIBAgIQGVtYpfrt0YFDIuYU1d3nlzANBgkqhkiG9w0BAQsFADAeMRwwGgYDVQQDDBNQMlNDb2F0cmVzYVJvb3RDZXJ0MCAXDTIwMDUxODA5MDIyMloYDzIxMjAwNTE4MDkxMjIyWjAeMRwwGgYDVQQDDBNQMlNDb2F0cmVzYVJvb3RDZXJ0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtXznECg9VSVXh1Y4RCWR3FFoExKtV/auPh7TaVn6lTpLvo5+9b2FwxnL9pgv4G4xkPYcQmQhm7hv0ZcTEkXL3sZqWWnWsofjKJaxObLHfydBhm2dCLFX8b1ifwii8bCWtPCcYWiRrgl5PCC+WQ1c33lDz9+W0LRAuoc/msSVc1WoSOYm+N4o49s8TsgusrK0YxfmpHCwVJYDpbJHinlI+g3Apw3ziDTBreth5cu4na39gGTUlFjvO8xtZeBuW6JOazsZ766BAqiNIx9IGi7mRrA6COgw/5ghp7Rx+WdD5jW77QMiOHwjDr+f76xP1l5giwlSqMJwCqQs3d2pFvxweQIDAQABozEwLzAOBgNVHQ8BAf8EBAMCAgQwHQYDVR0OBBYEFLKu9ACKR1zSCvt1p7/X3lNcJ93ZMA0GCSqGSIb3DQEBCwUAA4IBAQAho/mj0n1FxvBQb9UtM3rnN4ax4dqZjWYOVsbwlyaewzQ2IRLCC5rTBNP+5Vgf5YCBjKAZtcV39w8Axr7KVEUORA1NfkB8k6P4rDcxZMlHAOle8kEnveVmTXm+nLZBs8zH8O5SuEMuiJS2ifBEgExNIFlnvavcXVBF7R9TVig4+VoAFq+zKC7umf7V4WWEjK1sRtGWzj43PAY+AUImuxEqJw1iMLLLHKJ5mpvzg+u9XpMr22CYisiIuFJnapqybHj43Phy8TEnCc7RzT7g4YUt3cuvrYUtFW316q9smY+/jQC4EzOp8fGfwVRcX/9RCoIEIW9zLARxNX4Tl4YtxiwX"
+                            }
+                        }
+                    ],
+                    "vpnClientRevokedCertificates": [],
+                    "radiusServers": [],
+                    "vpnClientIpsecPolicies": []
+                },
+                "vpnGatewayGeneration": "[parameters('vpnGeneration')]"
+            }
+        }
+    
+    ],
+    "outputs": {      
+    }
+  }

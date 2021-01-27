@@ -1,0 +1,89 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {    
+      "location": {
+        "type": "string",      
+        "metadata": {
+          "description": "Location for all resources."
+        }
+      },
+      "virtualNetworkName": {
+        "type": "string",      
+        "metadata": {
+          "description": "Virtual Network Name"
+        }
+      }
+    },
+    "variables":{  
+        "subnet1Name": "appgateway-snet",
+        "subnet2Name": "vms-snet",
+        "subnet3Name": "sql-snet",
+        "subnet4Name": "GatewaySubnet"  
+    },
+    "resources": [
+      {
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('virtualNetworkName')]",
+      "apiVersion": "2017-06-01",
+      "location": "[parameters('location')]",
+      "comments": "This will build a Virtual Network.",
+      "dependsOn": [   
+          
+      ],
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "10.0.0.0/16"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnet1Name')]",
+            "properties": {
+              "addressPrefix": "10.0.0.0/24"
+            }
+          },
+          {
+            "name": "[variables('subnet2Name')]",
+            "properties": {
+              "addressPrefix": "10.0.1.0/24"              
+            }
+          },
+          {
+            "name": "[variables('subnet3Name')]",
+            "properties": {
+              "addressPrefix": "10.0.2.0/24",
+              "privateEndpointNetworkPolicies": "Disabled" 
+            }
+          },
+          {
+            "name": "[variables('subnet4Name')]",
+            "properties": {
+              "addressPrefix": "10.0.3.0/24"             
+            }
+          }
+
+        ]
+      }      
+    }
+    ],
+    "outputs": {
+      "subnet1Id": {
+          "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), variables('subnet1Name'))]" ,
+          "type": "string"
+      },
+      "subnet2Id": {
+          "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), variables('subnet2Name'))]" ,
+          "type": "string"
+      },
+      "subnet3Id": {
+          "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), variables('subnet3Name'))]" ,
+          "type": "string"
+      },
+      "subnet4Id": {
+          "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), variables('subnet4Name'))]" ,
+          "type": "string"
+      }
+    }
+  }

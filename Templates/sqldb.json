@@ -1,0 +1,209 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {    
+      "location": {
+        "type": "string",      
+        "metadata": {
+          "description": "Location for all resources."
+        }
+      },
+      "sqlServerName":{
+        "type": "string",
+        "metadata": {
+          "description": "name of the sqlserver"
+        }
+      },
+      "adminUsername": {
+        "type": "string",      
+        "metadata": {
+          "description": "Username for administrator user"
+        }      
+      },
+      "adminPassword": {
+        "type": "securestring",      
+        "metadata": {
+          "description": "Password for administrator user"
+        }      
+      },
+      "subnetId": {
+        "type": "string",      
+        "metadata": {
+          "description": "id of the subnet for the sqldatabase"
+        }      
+      },
+       "ipaddress": {
+        "type": "string",      
+        "metadata": {
+          "description": "address for the private link"
+        }      
+      },
+      "allowAzureIPs": {
+      "defaultValue": true,
+      "type": "bool",
+      "metadata": {
+        "description": "Allow Azure services to access server."
+         }
+    },
+     "connectionType": {
+      "defaultValue": "Default",
+      "allowedValues": [ "Default", "Redirect", "Proxy" ],
+      "type": "string",
+      "metadata": {
+        "description": "SQL logical server connection type."
+      }
+    }
+    },
+    "variables":{   
+        "rgName":"[resourceGroup().name]",   
+        "subscriptionId": "[subscription().subscriptionId]",
+        "uniqueStorage": "[uniqueString(variables('subscriptionId'), variables('rgName'), parameters('location'))]",
+        "storageName": "[tolower(concat('sqlva', variables('uniqueStorage')))]",
+        "StorageBlobContributor": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
+        "uniqueRoleGuid": "[guid(resourceId('Microsoft.Storage/storageAccounts', variables('storageName')), variables('storageBlobContributor'), resourceId('Microsoft.Sql/servers', parameters('sqlServerName')))]",
+        "PlinkName":"[concat(parameters('sqlServerName'),'_private_link')]"
+    },
+    "resources": [
+           {
+      "type": "Microsoft.Sql/servers",
+      "apiVersion": "2019-06-01-preview",
+      "name": "[parameters('sqlServerName')]",
+      "location": "[parameters('location')]",
+      "identity": "[json('{\"type\":\"SystemAssigned\"}')]",
+      "properties": {
+        "administratorLogin": "[parameters('adminUsername')]",
+        "administratorLoginPassword": "[parameters('adminPassword')]",
+        "version": "12.0"
+      },
+      "resources": [
+        {
+          "condition": "[parameters('allowAzureIPs')]",
+          "type": "firewallRules",
+          "apiVersion": "2015-05-01-preview",
+          "name": "AllowAllWindowsAzureIps",
+          "location": "[parameters('location')]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]"
+          ],
+          "properties": {
+             "endIpAddress": "0.0.0.0",
+            "startIpAddress": "0.0.0.0"
+          }
+        },
+        {        
+          "type": "securityAlertPolicies",
+          "apiVersion": "2017-03-01-preview",
+          "name": "Default",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]"
+          ],
+          "properties": {
+            "state": "Enabled",
+            "emailAccountAdmins": true
+          }
+        },
+        {         
+          "type": "vulnerabilityAssessments",
+          "apiVersion": "2018-06-01-preview",
+          "name": "Default",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]",
+            "[resourceId('Microsoft.Sql/servers/securityAlertPolicies', parameters('sqlServerName'), 'Default')]",
+            "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]"
+          ],
+          "properties": {
+            "storageContainerPath": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))).primaryEndpoints.blob, 'vulnerability-assessment')]",
+            "recurringScans": {
+              "isEnabled": true,
+              "emailSubscriptionAdmins": true
+            }
+          }
+        },
+        {
+          "type": "connectionPolicies",
+          "apiVersion": "2014-04-01",
+          "name": "Default",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]"
+          ],
+          "properties": {
+            "connectionType": "[parameters('connectionType')]"
+          }
+        }
+      ]
+    },
+    {      
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2019-06-01",
+      "name": "[variables('storageName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "StorageV2",
+      "resources": [
+        {        
+          "type": "Microsoft.Storage/storageAccounts/providers/roleAssignments",
+          "apiVersion": "2018-09-01-preview",
+          "name": "[concat(variables('storageName'), '/Microsoft.Authorization/', variables('uniqueRoleGuid') )]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]",
+            "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]"
+          ],
+          "properties": {
+            "roleDefinitionId": "[variables('StorageBlobContributor')]",
+            "principalId": "[reference(resourceId('Microsoft.Sql/servers', parameters('sqlServerName')), '2018-06-01-preview', 'Full').identity.principalId]",
+            "scope": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]",
+            "principalType": "ServicePrincipal"
+          }
+        }
+      ]
+    },
+    {
+            "type": "Microsoft.Network/privateEndpoints",
+            "apiVersion": "2019-12-01",
+            "name": "[concat(parameters('sqlServerName'),'_private_link')]",
+            "location":"[parameters('location')]",
+           "dependsOn":[
+              "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]"
+           ],
+            "properties": {
+                "privateLinkServiceConnections": [
+                    {
+                        "name": "[variables('PlinkName')]",
+                        "properties": {
+                            "privateLinkServiceId": "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]",                            
+                            "groupIds": [
+                                "sqlServer"
+                            ],
+                            "privateLinkServiceConnectionState": {
+                                "status": "Approved",
+                                "description": "Auto-approved",
+                                "actionsRequired": "None"
+                            }
+                        }
+                    }
+                ],
+                "manualPrivateLinkServiceConnections": [],
+                "subnet": {
+                    "id": "[parameters('subnetID')]"
+                },
+                "customDnsConfigs": [
+                    {
+                        "fqdn": "[concat(parameters('sqlServerName'),'.database.windows.net')]",
+                        "ipAddresses": [
+                            "[parameters('ipaddress')]"
+                            //"10.0.2.4"
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {
+      "resourceID": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]"
+          }
+    }
+  }

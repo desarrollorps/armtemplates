@@ -39,19 +39,6 @@
         "description": "Location for all resources."
       }
     },
-    
-    "nic1Name": {
-      "type": "string",
-      "metadata": {
-        "description": "Name of the Nic linked with the vm"
-      }
-    },
-    "diagStorageAccountName":{
-      "type": "string",
-      "metadata": {
-        "description": "Storage name for vm diagnostics"
-      }
-    },
     "virtualMachineName":{
       "type": "string",
       "defaultValue":"rpsvmweu",
@@ -59,6 +46,19 @@
         "description": "Virtual machine name"
       }
     },       
+    
+    "nicId": {
+      "type": "string",
+      "metadata": {
+        "description": "ID of the nic linked to the vm"
+      }
+    },
+    "diagStorageAccountUri":{
+      "type": "string",
+      "metadata": {
+        "description": "Storage account uri for vm diagnostics"
+      }
+    },    
     "pslocation": {
       "type": "string",
       "metadata": {
@@ -109,14 +109,14 @@
               "properties": {
                 "primary": true
               },
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('nic1Name'))]"
+              "id": "[parameters('nicId')]" //"[resourceId('Microsoft.Network/networkInterfaces', parameters('nic1Name'))]"
             }           
           ]
         },
         "diagnosticsProfile": {
           "bootDiagnostics": {
             "enabled": true,
-            "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts', parameters('diagStorageAccountName')), '2017-06-01').primaryEndpoints['blob']]"
+            "storageUri": "[parameters('diagStorageAccountUri')]" //"[reference(resourceId('Microsoft.Storage/storageAccounts', parameters('diagStorageAccountName')), '2017-06-01').primaryEndpoints['blob']]"
           }
         }
       },
@@ -147,6 +147,9 @@
     }
   ],
   "outputs": {
-    
-  }
+      "resourceID": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Compute/virtualMachines', parameters('virtualMachineName'))]"
+        }
+    }
 }

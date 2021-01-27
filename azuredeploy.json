@@ -2,21 +2,87 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    
-  
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Default Admin username"
+      },
+      "defaultValue":"rpsadmin"
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Default Admin password"
+      },
+      "defaultValue":"Ibermatica2020."
+    },
+    "diskSizeGB": {
+      "type": "int",
+       "allowedValues": [
+         64,128
+       ],
+       "defaultValue":128
+    },
+    "virtualMachineSize": {
+      "type": "string",
+      "defaultValue": "Standard_B2ms",
+      "metadata": {
+        "description": "Virtual machine size (has to be at least the size of Standard_A3 to support 2 NICs)"
+      },
+      "allowedValues": [
+        "Standard_D1_v2",
+        "Standard_D2S_v3",
+        "Standard_B2ms"
+      ]
+    },
+    "applicationGatewaySize": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_Small",
+        "Standard_Medium",
+        "Standard_Large",
+        "WAF_Medium"
+      ],
+      "defaultValue": "Standard_Small",
+      "metadata": {
+        "description": "application gateway size"
+      }
+    },
+    "applicationGatewayTier":{
+      "type": "string",
+      "allowedValues": [
+        "Standard",
+        "WAF"      
+      ],
+      "defaultValue": "Standard",
+      "metadata": {
+        "description": "application gateway tier"
+      }
+    }
   },
   "variables": {
+      "rgName":"[resourceGroup().name]",  
       /*Templates*/
       "diagsStorageTemplate":"uri",
       "rpsvmTemplate":"uri",
       "nsgTemplate":"uri",
+      "networkTemplate":"uri",
+      "nicTemplate":"uri",
+      "sqldatabaseTemplate":"uri",
+      "vpnTemplate":"uri",
+      "appGatewayTemplate":"uri",
       /*Location*/
       "location":"[resourceGroup().location]",
       /*Virtual machine*/
       "virtualmachinename":"rpsvmweu",
+     
       "diagStorageAccountName": "[concat('diags',uniqueString(resourceGroup().id))]",  
       /*NSG*/
       "vmSecurityGroupName": "[concat(variables('virtualMachineName'), '-nsg')]",
+      /*Virtual network*/
+      "virtualnetworkname":"[concat(variables('rgName'),'-vnet')]",
+      /*Sql server name*/
+      "sqlservername":"[toLower(concat('sql',resourceGroup().name))]"
       
   },
   "resources": [
@@ -61,8 +127,199 @@
       }
     },
     /*Network*/
+    {
+      "name": "virtualNetwork",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('networkTemplate')]"
+        },
+        "parameters": {
+          "virtualNetworkName": {
+            "value": "[variables('virtualnetworkname')]"
+          },
+          "location": {
+            "value": "[variables('location')]"
+          }
+        }
+      }
+    },
     /*Nic*/
+     {
+      "name": "nic1",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('nicTemplate')]"
+        },
+        "parameters": {
+          "nicName": {
+            "value": "[variables('virtualnetworkname')]"
+          },
+          "subnetid": {
+            "value": "[reference('virtualNetwork').outputs.subnet2Id.value]"
+          },
+          "nsgid": {
+            "value": "[reference('NSG').outputs.resourceID.value]"
+          },
+          "location": {
+            "value": "[variables('location')]"
+          }
+        }
+        
+      },
+      "dependsOn": [
+       "[resourceId('Microsoft.Resources/deployments', 'virtualNetwork')]",
+       "[resourceId('Microsoft.Resources/deployments', 'NSG')]"
+      ]
+    },
     /*VM*/
+    {
+      "name": "RPSVirtualMachine",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('rpsvmTemplate')]"
+        },
+        "parameters": {
+          "adminUsername": {
+            "value": "[parameters('adminUsername')]"
+          },
+          "adminPassword": {
+            "value": "[parameters('adminPassword')]"
+          },
+          "virtualMachineSize": {
+            "value": "[parameters('virtualMachineSize')]"
+          },
+           "diskSizeGB": {
+            "value": "[parameters('diskSizeGB')]"
+          },
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "nicId":{
+            "value": "[reference('nic1').outputs.resourceID.value]"
+          },
+          "diagStorageAccountUri":{
+            "value": "[reference(reference('diagStorageAccount').outputs.resourceID.value, '2017-06-01').primaryEndpoints['blob']]"            
+          }
+          
+        }
+        
+      },
+      "dependsOn": [
+       "[resourceId('Microsoft.Resources/deployments', 'diagStorageAccount')]",
+       "[resourceId('Microsoft.Resources/deployments', 'NSG')]"
+      ]
+    },
+    /*Database*/
+    {
+      "name": "SQLDatabase",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('sqldatabaseTemplate')]"
+        },
+        "parameters": {
+          "adminUsername": {
+            "value": "[parameters('adminUsername')]"
+          },
+          "adminPassword": {
+            "value": "[parameters('adminPassword')]"
+          },
+          "sqlServerName": {
+            "value": "[variables('sqlservername')]"
+          },
+           "subnetId": {
+            "value": "[reference('virtualNetwork').outputs.subnet3Id.value]"
+          },
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "ipaddress":{
+            "value": "10.0.2.4"
+          }          
+        }        
+      },
+      "dependsOn": [
+       "[resourceId('Microsoft.Resources/deployments', 'virtualNetwork')]"      
+      ]
+    },   
+    /*VPN*/
+     {
+      "name": "virtualNetwork",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('vpnTemplate')]"
+        },
+        "parameters": {
+          "subnetId": {
+            "value": "[reference('virtualNetwork').outputs.subnet4Id.value]"
+          },
+          "location": {
+            "value": "[variables('location')]"
+          }
+        }
+      },
+       "dependsOn": [
+       "[resourceId('Microsoft.Resources/deployments', 'virtualNetwork')]"      
+      ]
+    },
+    /*App gateway*/
+     {
+      "name": "appGateway",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('appGatewayTemplate')]"
+        },
+        "parameters": {
+          "subnetId": {
+            "value": "[reference('virtualNetwork').outputs.subnet1Id.value]"
+          },
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "nicId": {
+            "value": "[reference('nic1').outputs.resourceID.value]"
+          },
+          "applicationGatewaySize": {
+            "value": "[parameters('applicationGatewaySize')]"
+          },
+          "applicationGatewayTier": {
+            "value": "[parameters('applicationGatewayTier')]"
+          }
+        }
+      },
+       "dependsOn": [
+       "[resourceId('Microsoft.Resources/deployments', 'virtualNetwork')]",
+       "[resourceId('Microsoft.Resources/deployments', 'nic1')]" 
+      ]
+    }
+    /*Backups de VM*/
+    /*Alertas VM*/
+    /*Alertas BD*/
+    /*Alertas Insights*/
+    /*Automation*/
   ],
   "outputs": {}
 }
+/*Tras subir la plantilla:*/
+/*Deben restaurarse las BDs, RPS, Session y workflows si fuera necesario*/
+/*Hay que poner en el appgateway el dominio que tendrá*/
+/*Hay que dar de alta al usuario pricipal de la suscripción como admin de sqlserver*/
+/*Hay que montar las siguientes alertas*/
+/*Hay que montar los siguientes procesos de automatiomn*/
