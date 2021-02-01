@@ -71,6 +71,7 @@
       "sqldatabaseTemplate":"uri",
       "vpnTemplate":"uri",
       "appGatewayTemplate":"uri",
+      "insightsTemplate":"uri",
       /*Location*/
       "location":"[resourceGroup().location]",
       /*Virtual machine*/
@@ -82,7 +83,8 @@
       /*Virtual network*/
       "virtualnetworkname":"[concat(variables('rgName'),'-vnet')]",
       /*Sql server name*/
-      "sqlservername":"[toLower(concat('sql',resourceGroup().name))]"
+      "sqlservername":"[toLower(concat('sql',resourceGroup().name))]",
+      "workspaces_defaultworkspace":"[concat('DefaultWorkspace-',uniqueString(resourceGroup().id))]"
       
   },
   "resources": [
@@ -177,6 +179,28 @@
        "[resourceId('Microsoft.Resources/deployments', 'NSG')]"
       ]
     },
+     /*Insights Workspace*/
+     {
+      "name": "InsightsWorkspace",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('insightsTemplate')]"
+        },
+        "parameters": {       
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "workspaces_defaultworkspace":{
+            "value": "[variables('workspaces_defaultworkspace')]"
+          }
+          
+        }
+        
+      }
+    },
     /*VM*/
     {
       "name": "RPSVirtualMachine",
@@ -208,6 +232,9 @@
           },
           "diagStorageAccountUri":{
             "value": "[reference(reference('diagStorageAccount').outputs.resourceID.value, '2017-06-01').primaryEndpoints['blob']]"            
+          },
+          "diagStorageAccountName":{
+            "value":"[variables('diagStorageAccountName')]"
           }
           
         }
@@ -215,7 +242,8 @@
       },
       "dependsOn": [
        "[resourceId('Microsoft.Resources/deployments', 'diagStorageAccount')]",
-       "[resourceId('Microsoft.Resources/deployments', 'NSG')]"
+       "[resourceId('Microsoft.Resources/deployments', 'NSG')]",
+       "[resourceId('Microsoft.Resources/deployments', 'InsightsWorkspace')]"
       ]
     },
     /*Database*/
@@ -312,7 +340,7 @@
     /*Backups de VM*/
     /*Alertas VM*/
     /*Alertas BD*/
-    /*Alertas Insights*/
+   
     /*Automation*/
   ],
   "outputs": {}
@@ -321,5 +349,7 @@
 /*Deben restaurarse las BDs, RPS, Session y workflows si fuera necesario*/
 /*Hay que poner en el appgateway el dominio que tendrá*/
 /*Hay que dar de alta al usuario pricipal de la suscripción como admin de sqlserver*/
+/*Hay que poner en el centro de backup una directiva de backup y una instancia de backup para las vm*/
 /*Hay que montar las siguientes alertas*/
+  /*En RPSNextAppInsights hay que crear la prueba de disponibilidad*/
 /*Hay que montar los siguientes procesos de automatiomn*/
