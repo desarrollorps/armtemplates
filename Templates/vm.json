@@ -21,8 +21,9 @@
         "description": "Virtual machine size (has to be at least the size of Standard_A3 to support 2 NICs)"
       },
       "allowedValues": [
-        "Standard_D1_v2",
-        "Standard_D2S_v3"
+         "Standard_D1_v2",
+        "Standard_D2S_v3",
+        "Standard_B2ms"
       ]
     },
     
