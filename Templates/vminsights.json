@@ -23,7 +23,7 @@
             "name": "[parameters('workspaces_defaultworkspace')]",
             "location": "[parameters('location')]",
             "properties": {
-                "provisioningState": "Succeeded",
+                //"provisioningState": "Succeeded",
                 "sku": {
                     "name": "pergb2018"
                 },
