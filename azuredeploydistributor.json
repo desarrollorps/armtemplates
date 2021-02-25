@@ -82,6 +82,7 @@
       "vmSecurityGroupName": "[concat(variables('virtualMachineName'), '-nsg')]",
       /*Virtual network*/
       "virtualnetworkname":"[concat(variables('rgName'),'-vnet')]",
+       "nicname":"[concat(variables('rgName'),'-nic')]",
       /*Sql server name*/
       "sqlservername":"[toLower(concat('sql',resourceGroup().name))]",
       "workspaces_defaultworkspace":"[concat('DefaultWorkspace-',uniqueString(resourceGroup().id))]"
@@ -160,7 +161,7 @@
         },
         "parameters": {
           "nicName": {
-            "value": "[variables('virtualnetworkname')]"
+            "value": "[variables('nicname')]"
           },
           "subnetid": {
             "value": "[reference('virtualNetwork').outputs.subnet2Id.value]"
