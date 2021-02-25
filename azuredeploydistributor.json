@@ -202,6 +202,30 @@
         
       }
     },
+    {
+          "type": "Microsoft.Insights/actionGroups",
+          "apiVersion": "2019-03-01",
+          "name": "Acciones a Desarrollo",
+          "location": "Global",
+          
+          "properties": {
+            "groupShortName": "Desarrollo",
+            "enabled": true,
+            "emailReceivers": [
+              {
+                "name": "Email Asier",
+                "emailAddress": "a.ayestaran@ibermatica.com",
+                "useCommonAlertSchema": true
+
+              },
+              {
+                "name": "Email Xabi",
+                "emailAddress": "x.arrieta@ibermatica.com",
+                "useCommonAlertSchema": true
+              }
+            ]
+          }
+        },
     /*VM*/
     {
       "name": "RPSVirtualMachine",
@@ -244,7 +268,10 @@
       "dependsOn": [
        "[resourceId('Microsoft.Resources/deployments', 'diagStorageAccount')]",
        "[resourceId('Microsoft.Resources/deployments', 'NSG')]",
-       "[resourceId('Microsoft.Resources/deployments', 'InsightsWorkspace')]"
+       "[resourceId('Microsoft.Resources/deployments', 'InsightsWorkspace')]",
+       
+       "[concat('Microsoft.Insights/actionGroups/', 'Acciones a Desarrollo')]"
+              
       ]
     },
     /*Database*/
