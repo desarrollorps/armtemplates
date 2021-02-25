@@ -14,12 +14,19 @@
           "description": "Subnet id linked to the application gateway"
         }
       },
-      "nicId": {
+      /*"nicId": {
         "type": "string",      
         "metadata": {
           "description": "To redirect the traffic from internet to the vm"
         }
-      },
+      },*/
+      "privateIpAddress": {
+        "type": "string",      
+        "metadata": {
+          "description": "Private IP address of the nic"
+        }
+      }
+      ,
        "applicationGatewaySize": {
       "type": "string",
       "allowedValues": [
@@ -155,7 +162,7 @@
               "backendAddresses": [
                 {
                   //"fqdn":"[parameters('virtualMachineName')]",
-                  "ipAddress":"[reference(parameters('nicId')).ipConfigurations[0].properties.privateIPAddress]"
+                  "ipAddress":"[parameters('privateIPAddress')]"//"[reference(parameters('nicId')).ipConfigurations[0].properties.privateIPAddress]"
                 }
               ]
             }

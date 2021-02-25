@@ -62,6 +62,10 @@
       "resourceID": {
             "type": "string",
             "value": "[resourceId('Microsoft.Network/networkInterfaces', parameters('nicName'))]"
-        }
+        },
+        "networkInterface":{
+        "value": "[reference(resourceId('Microsoft.Network/networkInterfaces', parameters('nicName')),'2016-09-01')]",
+        "type": "object"
+      }
     }
   }

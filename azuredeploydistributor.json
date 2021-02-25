@@ -322,8 +322,8 @@
           "location": {
             "value": "[variables('location')]"
           },
-          "nicId": {
-            "value": "[reference('nic1').outputs.resourceID.value]"
+          "privateIPAddress": {
+            "value": "[reference('nic1').outputs.networkInterface.value.ipConfigurations[0].properties.privateIPAddress]"
           },
           "applicationGatewaySize": {
             "value": "[parameters('applicationGatewaySize')]"
