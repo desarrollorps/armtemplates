@@ -241,6 +241,9 @@
           "apiVersion": "2019-03-01",
           "name": "Acciones a Desarrollo",
           "location": "Global",
+          "dependsOn": [
+                  "[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]"
+              ],
           "properties": {
             "groupShortName": "Desarrollo",
             "enabled": true,
@@ -264,6 +267,9 @@
             "type": "Microsoft.Insights/metricAlerts",
             "location": "global",
             "apiVersion": "2018-03-01",
+            "dependsOn": [
+                  "[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]"
+              ],
             "tags": {},
             "properties": {
                 "description": "Ha habido un pico de la CPU de mas del 95%",
@@ -297,6 +303,9 @@
             "type": "Microsoft.Insights/scheduledQueryRules",
             "location": "global",
             "apiVersion": "2020-05-01-preview",
+            "dependsOn": [
+                  "[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]"
+              ],
             "tags": {},
             "properties": {
                 "description": "Alguno de los discos de la maquina virtual tiene menos de un 10% de espacio libre",
@@ -341,6 +350,9 @@
             "type": "Microsoft.Insights/scheduledQueryRules",
             "location": "global",
             "apiVersion": "2020-05-01-preview",
+            "dependsOn": [
+                  "[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]"
+              ],
             "tags": {},
             "properties": {
                 "description": "La memoria disponible de la maquina virtual esta por debajo del 10%",
