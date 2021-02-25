@@ -64,14 +64,14 @@
       "rgName":"[resourceGroup().name]",  
       /*Templates*/
       "diagsStorageTemplate":"https://raw.githubusercontent.com/desarrollorps/armtemplates/main/Templates/diagStorageAccount.json",
-      "rpsvmTemplate":"uri",
-      "nsgTemplate":"uri",
-      "networkTemplate":"uri",
-      "nicTemplate":"uri",
-      "sqldatabaseTemplate":"uri",
-      "vpnTemplate":"uri",
+      "rpsvmTemplate":"https://raw.githubusercontent.com/desarrollorps/armtemplates/main/Templates/vm.json",
+      "nsgTemplate":"https://raw.githubusercontent.com/desarrollorps/armtemplates/main/Templates/nsg.json",
+      "networkTemplate":"https://raw.githubusercontent.com/desarrollorps/armtemplates/main/Templates/virtualNetwork.json",
+      "nicTemplate":"https://raw.githubusercontent.com/desarrollorps/armtemplates/main/Templates/nic.json",
+      "sqldatabaseTemplate":"https://raw.githubusercontent.com/desarrollorps/armtemplates/main/Templates/sqldb.json",
+      "vpnTemplate":"https://raw.githubusercontent.com/desarrollorps/armtemplates/main/Templates/vpn.json",
       "appGatewayTemplate":"https://raw.githubusercontent.com/desarrollorps/armtemplates/main/Templates/appgateway.json",
-      "insightsTemplate":"uri",
+      "insightsTemplate":"https://raw.githubusercontent.com/desarrollorps/armtemplates/main/Templates/vminsights.json",
       /*Location*/
       "location":"[resourceGroup().location]",
       /*Virtual machine*/
@@ -231,7 +231,7 @@
             "value": "[reference('nic1').outputs.resourceID.value]"
           },
           "diagStorageAccountUri":{
-            "value": "[reference(reference('diagStorageAccount').outputs.resourceID.value, '2017-06-01').primaryEndpoints['blob']]"            
+            "value": "[reference('diagStorageAccount').outputs.BlobUri.value]"            
           },
           "diagStorageAccountName":{
             "value":"[variables('diagStorageAccountName')]"

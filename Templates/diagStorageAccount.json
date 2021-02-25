@@ -45,6 +45,10 @@
     "resourceID": {
             "type": "string",
             "value": "[resourceId('Microsoft.Storage/storageAccounts', parameters('diagStorageAccountName'))]"
-        }
+        },
+      "BlobUri": {
+        "value": "[reference(resourceId('Microsoft.Storage/storageAccounts', parameters('diagStorageAccountName'))).primaryEndpoints.blob]",
+        "type" : "string"
+    }
   }
 }
