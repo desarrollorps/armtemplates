@@ -21,7 +21,7 @@
        "allowedValues": [
          64,128
        ],
-       "defaultValue":128
+       "defaultValue":64
     },
     "virtualMachineSize": {
       "type": "string",

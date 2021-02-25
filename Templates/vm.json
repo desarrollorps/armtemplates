@@ -168,7 +168,12 @@
               "type": "AzureMonitorWindowsAgent",
               "typeHandlerVersion": "1.0",
               "autoUpgradeMinorVersion": true
-          }
+          },
+          "dependsOn": [
+             "[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]"
+            
+          ]
+          
           },
           {
               "type": "extensions",
@@ -191,6 +196,7 @@
           "apiVersion": "2017-03-30",
           "location": "[parameters('location')]",
           "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]"
           ],
           "properties": {
             "publisher": "Microsoft.Azure.Monitoring.DependencyAgent",
