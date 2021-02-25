@@ -119,7 +119,7 @@
           "uri": "[variables('diagsStorageTemplate')]"
         },
         "parameters": {
-          "storageAccountName": {
+          "diagStorageAccountName": {
             "value": "[variables('diagStorageAccountName')]"
           },
           "location": {

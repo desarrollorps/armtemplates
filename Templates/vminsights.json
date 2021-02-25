@@ -38,7 +38,7 @@
         {
             "type": "Microsoft.OperationalInsights/workspaces/savedSearches",
             "apiVersion": "2020-08-01",
-            "name": "[concat(parameters('workspaces_defaultworkspace'), ')_General|AlphabeticallySortedComputers')]",
+            "name": "[concat(parameters('workspaces_defaultworkspace'), '_General|AlphabeticallySortedComputers')]",
             "dependsOn": [
                 "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaces_defaultworkspace'))]"
             ],
@@ -52,7 +52,7 @@
         {
             "type": "Microsoft.OperationalInsights/workspaces/savedSearches",
             "apiVersion": "2020-08-01",
-            "name": "[concat(parameters('workspaces_defaultworkspace'), ')_General|dataPointsPerManagementGroup')]",
+            "name": "[concat(parameters('workspaces_defaultworkspace'), '_General|dataPointsPerManagementGroup')]",
             "dependsOn": [
                 "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaces_defaultworkspace'))]"
             ],
@@ -66,7 +66,7 @@
         {
             "type": "Microsoft.OperationalInsights/workspaces/savedSearches",
             "apiVersion": "2020-08-01",
-            "name": "[concat(parameters('workspaces_defaultworkspace'), ')_General|dataTypeDistribution')]",
+            "name": "[concat(parameters('workspaces_defaultworkspace'), '_General|dataTypeDistribution')]",
             "dependsOn": [
                 "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaces_defaultworkspace'))]"
             ],
