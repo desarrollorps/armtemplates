@@ -35,10 +35,13 @@
                 "publicNetworkAccessForQuery": "Enabled"
             },
             "resources":[
-                {
+                
+            ]
+        },
+        {
             "type": "Microsoft.OperationalInsights/workspaces/savedSearches",
             "apiVersion": "2020-08-01",
-            "name": "[concat(parameters('workspaces_defaultworkspace'), '_General|AlphabeticallySortedComputers')]",
+            "name": "[concat(parameters('workspaces_defaultworkspace'), '/General|AlphabeticallySortedComputers')]",
             "dependsOn": [
                 "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaces_defaultworkspace'))]"
             ],
@@ -52,7 +55,7 @@
         {
             "type": "Microsoft.OperationalInsights/workspaces/savedSearches",
             "apiVersion": "2020-08-01",
-            "name": "[concat(parameters('workspaces_defaultworkspace'), '_General|dataPointsPerManagementGroup')]",
+            "name": "[concat(parameters('workspaces_defaultworkspace'), '/General|dataPointsPerManagementGroup')]",
             "dependsOn": [
                 "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaces_defaultworkspace'))]"
             ],
@@ -66,7 +69,7 @@
         {
             "type": "Microsoft.OperationalInsights/workspaces/savedSearches",
             "apiVersion": "2020-08-01",
-            "name": "[concat(parameters('workspaces_defaultworkspace'), '_General|dataTypeDistribution')]",
+            "name": "[concat(parameters('workspaces_defaultworkspace'), '/General|dataTypeDistribution')]",
             "dependsOn": [
                 "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaces_defaultworkspace'))]"
             ],
@@ -580,11 +583,7 @@
                 "Query": "Event | where EventLog == \"Microsoft-Windows-Windows Firewall With Advanced Security/Firewall\" and EventID == 2008 | summarize AggregatedValue = count() by Computer | limit 500000\r\n// Oql: Type=Event EventLog=\"Microsoft-Windows-Windows Firewall With Advanced Security/Firewall\" EventID=2008 | measure count() by Computer | top 500000 // Args: {OQ: True; WorkspaceId: 00000000-0000-0000-0000-000000000000} // Settings: {PTT: True; SortI: True; SortF: True} // Version: 0.1.122",
                 "Version": 2
             }
-        }
-
-            ]
         },
-        
         {
             "type": "Microsoft.OperationsManagement/solutions",
             "apiVersion": "2015-11-01-preview",
