@@ -28,7 +28,7 @@
         "scriptsbaselocation":"https://raw.githubusercontent.com/desarrollorps/armtemplates/main/AutomationPS/"
     },
     "resources": [
-            {
+{
       "type": "Microsoft.Automation/automationAccounts",
       "apiVersion": "2020-01-13-preview",
       "name": "[parameters('automationAccountName')]",
@@ -72,7 +72,7 @@
             "logVerbose": "false",
             "description": "Disable alert rules",
             "publishContentLink": {
-              "uri": "[uri(variables('scriptsbaselocation'), '/Disable-Rules.ps1')]",
+              "uri": "[uri(variables('scriptsbaselocation'), 'Disable-Rules.ps1')]",
               "version": "1.0.0.0"
             }
           }
