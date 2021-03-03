@@ -16,6 +16,13 @@
       },
       "defaultValue":"Ibermatica2020."
     },
+     "customerName": {
+      "type": "string",
+      "metadata": {
+        "description": "Customer Name that identifies this rpsinstallation throught azure"
+      }
+      
+    },
     "diskSizeGB": {
       "type": "int",
        "allowedValues": [
@@ -72,6 +79,7 @@
       "vpnTemplate":"https://raw.githubusercontent.com/desarrollorps/armtemplates/main/Templates/vpn.json",
       "appGatewayTemplate":"https://raw.githubusercontent.com/desarrollorps/armtemplates/main/Templates/appgateway.json",
       "insightsTemplate":"https://raw.githubusercontent.com/desarrollorps/armtemplates/main/Templates/vminsights.json",
+      "automationTemplate":"https://raw.githubusercontent.com/desarrollorps/armtemplates/main/Templates/automation.json",
       /*Location*/
       "location":"[resourceGroup().location]",
       /*Virtual machine*/
@@ -366,10 +374,11 @@
       ]
     },
     /*Backups de VM*/
+    /*Alertas VM*/
     {
             "name": "CPU Max Over 95percent",
             "type": "Microsoft.Insights/metricAlerts",
-            "location": "[variables('location')]",
+            "location": "global",
             "apiVersion": "2018-03-01",
             "dependsOn": [
                    "[resourceId('Microsoft.Resources/deployments', 'RPSVirtualMachine')]",
@@ -406,7 +415,7 @@
         {
             "name": "Disk free space under 10 percent",
             "type": "Microsoft.Insights/scheduledQueryRules",
-             "location": "[variables('location')]",
+             "location": "global",
             "apiVersion": "2020-05-01-preview",
             "dependsOn": [
                   "[resourceId('Microsoft.Resources/deployments', 'RPSVirtualMachine')]",
@@ -423,8 +432,7 @@
                 "criteria": {
                     "allOf": [
                         {
-                            "query": "InsightsMetrics | where Origin == 'vm.azm.ms' | where Namespace == 'LogicalDisk' and Name == 'FreeSpacePercentage' | extend Disk=tostring(todynamic(Tags)['vm.azm.ms/mountId'])
-| summarize AggregatedValue = avg(Val) by bin(TimeGenerated, 15m), Computer, _ResourceId, Disk",
+                            "query": "InsightsMetrics | where Origin == 'vm.azm.ms' | where Namespace == 'LogicalDisk' and Name == 'FreeSpacePercentage' | extend Disk=tostring(todynamic(Tags)['vm.azm.ms/mountId']) | summarize AggregatedValue = avg(Val) by bin(TimeGenerated, 15m), Computer, _ResourceId, Disk",
                             "metricMeasureColumn": "AggregatedValue",                            
                             "dimensions":[
                               {
@@ -443,7 +451,7 @@
                         }
                     ]
                 },
-                "muteActionsDuration": "PT5M",
+                //"muteActionsDuration": "PT5M",
                 "actions": [
                     {
                         "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', 'Acciones a Desarrollo')]"
@@ -454,7 +462,7 @@
         {
             "name": "Memory AVG under 10 percent",
             "type": "Microsoft.Insights/scheduledQueryRules",
-             "location": "[variables('location')]",
+             "location": "global",
             "apiVersion": "2020-05-01-preview",
             "dependsOn": [
                   "[resourceId('Microsoft.Resources/deployments', 'RPSVirtualMachine')]",
@@ -472,12 +480,7 @@
                 "criteria": {
                     "allOf": [
                         {
-                            "query": "InsightsMetrics 
-| where Origin == 'vm.azm.ms' 
-| where Namespace == 'Memory' and Name == 'AvailableMB' 
-| extend TotalMemory = toreal(todynamic(Tags)['vm.azm.ms/memorySizeMB'])
-| extend AvailableMemoryPercentage = (toreal(Val) / TotalMemory) * 100.0 
-| summarize AggregatedValue = avg(AvailableMemoryPercentage) by bin(TimeGenerated, 15m), Computer, _ResourceId",
+                            "query": "InsightsMetrics | where Origin == 'vm.azm.ms' | where Namespace == 'Memory' and Name == 'AvailableMB' | extend TotalMemory = toreal(todynamic(Tags)['vm.azm.ms/memorySizeMB']) | extend AvailableMemoryPercentage = (toreal(Val) / TotalMemory) * 100.0 | summarize AggregatedValue = avg(AvailableMemoryPercentage) by bin(TimeGenerated, 15m), Computer, _ResourceId",
                             "metricMeasureColumn": "AggregatedValue",                            
                             "dimensions":[                             
                             ],
@@ -491,18 +494,43 @@
                         }
                     ]
                 },
-                "muteActionsDuration": "PT5M",
+                //"muteActionsDuration": "PT5M",
                 "actions": [
                     {
                         "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', 'Acciones a Desarrollo')]"
                     }
                 ]
             }
-        }
-    /*Alertas VM*/
+        },
+         /*En RPSNextAppInsights hay que crear la prueba de disponibilidad*/
+  
     /*Alertas BD*/
    
     /*Automation*/
+    {
+      "name": "Automation",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('automationTemplate')]"
+        },
+        "parameters": {
+          "customerName": {
+            "value": "[parameters('customerName')]"
+          },
+          "automationAccountName": {
+            "value": "rpsautomation"
+          },
+          "location": {
+            "value": "[variables('location')]"
+          }          
+        }        
+      },
+      "dependsOn": [      
+      ]
+    }
   ],
   "outputs": {}
 }
@@ -511,6 +539,6 @@
 /*Hay que poner en el appgateway el dominio que tendrá*/
 /*Hay que dar de alta al usuario pricipal de la suscripción como admin de sqlserver*/
 /*Hay que poner en el centro de backup una directiva de backup y una instancia de backup para las vm*/
-/*Hay que montar las siguientes alertas*/
-  /*En RPSNextAppInsights hay que crear la prueba de disponibilidad*/
+
+ 
 /*Hay que montar los siguientes procesos de automatiomn*/
