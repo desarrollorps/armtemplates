@@ -42,7 +42,7 @@
         {
           "type": "runbooks",
           "apiVersion": "2018-06-30",
-          "name": "[concat(parameters('automationAccountName'),'/Enable Rules')]",
+          "name": "Enable Rules",
           "location": "[parameters('location')]",
           "dependsOn": [
             "[parameters('automationAccountName')]"
@@ -61,7 +61,7 @@
         {
           "type": "runbooks",
           "apiVersion": "2018-06-30",
-          "name": "[concat(parameters('automationAccountName'),'/Disable Rules')]",
+          "name": "Disable Rules",
           "location": "[parameters('location')]",
           "dependsOn": [
             "[parameters('automationAccountName')]"
@@ -80,7 +80,7 @@
         {
           "type": "runbooks",
           "apiVersion": "2018-06-30",
-          "name": "[concat(parameters('automationAccountName'),'/Restart AppPools')]",
+          "name": "Restart AppPools",
           "location": "[parameters('location')]",
           "dependsOn": [
             "[parameters('automationAccountName')]"
@@ -99,7 +99,7 @@
         {
           "type": "runbooks",
           "apiVersion": "2018-06-30",
-          "name": "[concat(parameters('automationAccountName'),'/Start VM')]",
+          "name": "Start VM",
           "location": "[parameters('location')]",
           "dependsOn": [
             "[parameters('automationAccountName')]"
@@ -118,7 +118,7 @@
         {
           "type": "runbooks",
           "apiVersion": "2018-06-30",
-          "name": "[concat(parameters('automationAccountName'),'/Stop VM')]",
+          "name": "Stop VM",
           "location": "[parameters('location')]",
           "dependsOn": [
             "[parameters('automationAccountName')]"
@@ -137,7 +137,7 @@
         {
           "type": "runbooks",
           "apiVersion": "2018-06-30",
-          "name": "[concat(parameters('automationAccountName'),'/Update Automation Azure Modules')]",
+          "name": "Update Automation Azure Modules",
           "location": "[parameters('location')]",
           "dependsOn": [
             "[parameters('automationAccountName')]"
