@@ -42,7 +42,7 @@
         {
           "type": "runbooks",
           "apiVersion": "2018-06-30",
-          "name": "[concat(parameters('automationAccountName'),'Enable Rules')]",
+          "name": "[concat(parameters('automationAccountName'),'/Enable Rules')]",
           "location": "[parameters('location')]",
           "dependsOn": [
             "[parameters('automationAccountName')]"
