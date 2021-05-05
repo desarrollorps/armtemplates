@@ -7,13 +7,7 @@
         "metadata": {
           "description": "Location for all resources."
         }
-      },
-      "VPNConnectionName": {
-        "type": "string",      
-        "metadata": {
-          "description": "Name for the VPN"
-        }
-      },
+      },    
       "subnetId":{
         "type": "string",
         "metadata": {
@@ -38,7 +32,7 @@
     "variables":{   
         "rgName":"[resourceGroup().name]",   
         "publicIpVPNAddressName":"[concat(variables('rgName'),'-vpn-publicIp')]",
-        "vpnName":"[parameters('VPNConnectionName')]"
+        "vpnName":"vpn-gateway"
     },
     "resources": [
       {

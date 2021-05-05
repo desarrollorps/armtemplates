@@ -90,7 +90,7 @@
       /*Virtual network*/
       "virtualnetworkname":"[concat(parameters('customerName'),'-',variables('rgName'),'-vnet')]",
       /*Sql server name*/
-      "sqlservername":"[toLower(concat('sql',resourceGroup().name))]",
+      "sqlservername":"[toLower(concat(parameters('customerName'),'sql',resourceGroup().name))]",
       "workspaces_defaultworkspace":"[concat('DefaultWorkspace-',uniqueString(resourceGroup().id))]"
       
   },
