@@ -478,7 +478,7 @@
   
     /*VPN*/
      {
-      "name": "virtualNetwork",
+      "name": "vpnNetwork",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2018-05-01",
       "properties": {
