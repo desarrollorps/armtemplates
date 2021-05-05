@@ -87,7 +87,7 @@
       /*NSG*/
       "vmSecurityGroupName": "[concat(variables('virtualMachineName'), '-nsg')]",
       /*Virtual network*/
-      "virtualnetworkname":"[concat(parameters('customer'),variables('rgName'),'-vnet')]",
+      "virtualnetworkname":"[concat(parameters('customer'),'-',variables('rgName'),'-vnet')]",
       /*Sql server name*/
       "sqlservername":"[toLower(concat('sql',resourceGroup().name))]",
       "workspaces_defaultworkspace":"[concat('DefaultWorkspace-',uniqueString(resourceGroup().id))]"
