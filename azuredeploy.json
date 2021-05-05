@@ -2,7 +2,7 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "customer": {
+    "customerName": {
       "type": "string",
       "metadata": {
         "description": "Customername for the installation"
@@ -78,6 +78,7 @@
       "vpnTemplate":"https://raw.githubusercontent.com/desarrollorps/armtemplates/main/Templates/vpn.json",
       "appGatewayTemplate":"https://raw.githubusercontent.com/desarrollorps/armtemplates/main/Templates/appgateway.json",
       "insightsTemplate":"https://raw.githubusercontent.com/desarrollorps/armtemplates/main/Templates/vminsights.json",
+      "automationTemplate":"https://raw.githubusercontent.com/desarrollorps/armtemplates/main/Templates/automation.json",
       /*Location*/
       "location":"[resourceGroup().location]",
       /*Virtual machine*/
@@ -87,7 +88,7 @@
       /*NSG*/
       "vmSecurityGroupName": "[concat(variables('virtualMachineName'), '-nsg')]",
       /*Virtual network*/
-      "virtualnetworkname":"[concat(parameters('customer'),'-',variables('rgName'),'-vnet')]",
+      "virtualnetworkname":"[concat(parameters('customerName'),'-',variables('rgName'),'-vnet')]",
       /*Sql server name*/
       "sqlservername":"[toLower(concat('sql',resourceGroup().name))]",
       "workspaces_defaultworkspace":"[concat('DefaultWorkspace-',uniqueString(resourceGroup().id))]"
@@ -207,6 +208,35 @@
         
       }
     },
+      {
+          "type": "Microsoft.Insights/actionGroups",
+          "apiVersion": "2019-03-01",
+          "name": "Acciones a Desarrollo",
+          "location": "Global",
+          
+          "properties": {
+            "groupShortName": "Desarrollo",
+            "enabled": true,
+            "emailReceivers": [
+              {
+                "name": "Email Asier",
+                "emailAddress": "a.ayestaran@ibermatica.com",
+                "useCommonAlertSchema": true
+
+              },
+              {
+                "name": "Email Xabi",
+                "emailAddress": "x.arrieta@ibermatica.com",
+                "useCommonAlertSchema": true
+              },
+              {
+                "name": "Email Jorge",
+                "emailAddress": "j.tamara@ibermatica.com",
+                "useCommonAlertSchema": true
+              }
+            ]
+          }
+        },
     /*VM*/
     {
       "name": "RPSVirtualMachine",
@@ -237,7 +267,7 @@
             "value": "[reference('nic1').outputs.resourceID.value]"
           },
           "diagStorageAccountUri":{
-            "value": "[reference(reference('diagStorageAccount').outputs.resourceID.value, '2017-06-01').primaryEndpoints['blob']]"            
+            "value": "[reference('diagStorageAccount').outputs.BlobUri.value]"            
           },
           "diagStorageAccountName":{
             "value":"[variables('diagStorageAccountName')]"
@@ -249,7 +279,8 @@
       "dependsOn": [
        "[resourceId('Microsoft.Resources/deployments', 'diagStorageAccount')]",
        "[resourceId('Microsoft.Resources/deployments', 'NSG')]",
-       "[resourceId('Microsoft.Resources/deployments', 'InsightsWorkspace')]"
+       "[resourceId('Microsoft.Resources/deployments', 'InsightsWorkspace')]",
+       "[concat('Microsoft.Insights/actionGroups/', 'Acciones a Desarrollo')]"
       ]
     },
     /*Database*/
@@ -287,6 +318,164 @@
        "[resourceId('Microsoft.Resources/deployments', 'virtualNetwork')]"      
       ]
     },   
+    /*Alertas VM*/
+    {
+            "name": "CPU Max Over 95percent",
+            "type": "Microsoft.Insights/metricAlerts",
+            "location": "global",
+            "apiVersion": "2018-03-01",
+            "dependsOn": [
+                   "[resourceId('Microsoft.Resources/deployments', 'RPSVirtualMachine')]",
+                   "[resourceId('Microsoft.Insights/actionGroups', 'Acciones a Desarrollo')]"
+              ],
+            "tags": {},
+            "properties": {
+                "description": "Ha habido un pico de la CPU de mas del 95%",
+                "severity": "3",
+                "enabled": true,
+                "scopes": ["[reference('RPSVirtualMachine').outputs.resourceID.value]"],
+                "evaluationFrequency":"PT5M",
+                "windowSize": "PT5M",
+                "criteria": {
+                    "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+                    "allOf": [
+                        {
+                            "name" : "Cada vez que el valor máximo de percentage cpu es mayor que que 95%",
+                            "metricName": "Percentage CPU",
+                            "dimensions":[],
+                            "operator": "GreaterThan",
+                            "threshold" : "95",
+                            "timeAggregation": "Maximum"
+                        }
+                    ]
+                },
+                "actions": [
+                    {
+                        "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', 'Acciones a Desarrollo')]"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Disk free space under 10 percent",
+            "type": "Microsoft.Insights/scheduledQueryRules",
+             "location": "global",
+            "apiVersion": "2020-05-01-preview",
+            "dependsOn": [
+                  "[resourceId('Microsoft.Resources/deployments', 'RPSVirtualMachine')]",
+                  "[resourceId('Microsoft.Insights/actionGroups', 'Acciones a Desarrollo')]"
+              ],
+            "tags": {},
+            "properties": {
+                "description": "Alguno de los discos de la maquina virtual tiene menos de un 10% de espacio libre",
+                "severity": "3",
+                "enabled": true,
+                 "scopes": ["[reference('RPSVirtualMachine').outputs.resourceID.value]"],
+                "evaluationFrequency":"PT15M",
+                "windowSize": "PT15M",
+                "criteria": {
+                    "allOf": [
+                        {
+                            "query": "InsightsMetrics | where Origin == 'vm.azm.ms' | where Namespace == 'LogicalDisk' and Name == 'FreeSpacePercentage' | extend Disk=tostring(todynamic(Tags)['vm.azm.ms/mountId']) | summarize AggregatedValue = avg(Val) by bin(TimeGenerated, 15m), Computer, _ResourceId, Disk",
+                            "metricMeasureColumn": "AggregatedValue",                            
+                            "dimensions":[
+                              {
+                              "name":"Disk",
+                              "operator": "Include",
+                              "values": ["*"]
+                            }
+                            ],
+                            "operator": "LessThan",
+                            "threshold" : "10",
+                            "timeAggregation": "Average",
+                            "failingPeriods": {
+                                "numberOfEvaluationPeriods": "4",
+                                "minFailingPeriodsToAlert": "1"
+                            }
+                        }
+                    ]
+                },
+                //"muteActionsDuration": "PT5M",
+                "actions": [
+                    {
+                        "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', 'Acciones a Desarrollo')]"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Memory AVG under 10 percent",
+            "type": "Microsoft.Insights/scheduledQueryRules",
+             "location": "global",
+            "apiVersion": "2020-05-01-preview",
+            "dependsOn": [
+                  "[resourceId('Microsoft.Resources/deployments', 'RPSVirtualMachine')]",
+                  "[resourceId('Microsoft.Insights/actionGroups', 'Acciones a Desarrollo')]"
+
+              ],
+            "tags": {},
+            "properties": {
+                "description": "La memoria disponible de la maquina virtual esta por debajo del 10%",
+                "severity": "3",
+                "enabled": true,
+                 "scopes": ["[reference('RPSVirtualMachine').outputs.resourceID.value]"],
+                "evaluationFrequency":"PT15M",
+                "windowSize": "PT15M",
+                "criteria": {
+                    "allOf": [
+                        {
+                            "query": "InsightsMetrics | where Origin == 'vm.azm.ms' | where Namespace == 'Memory' and Name == 'AvailableMB' | extend TotalMemory = toreal(todynamic(Tags)['vm.azm.ms/memorySizeMB']) | extend AvailableMemoryPercentage = (toreal(Val) / TotalMemory) * 100.0 | summarize AggregatedValue = avg(AvailableMemoryPercentage) by bin(TimeGenerated, 15m), Computer, _ResourceId",
+                            "metricMeasureColumn": "AggregatedValue",                            
+                            "dimensions":[                             
+                            ],
+                            "operator": "LessThan",
+                            "threshold" : "10",
+                            "timeAggregation": "Average",
+                            "failingPeriods": {
+                                "numberOfEvaluationPeriods": "4",
+                                "minFailingPeriodsToAlert": "1"
+                            }
+                        }
+                    ]
+                },
+                //"muteActionsDuration": "PT5M",
+                "actions": [
+                    {
+                        "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', 'Acciones a Desarrollo')]"
+                    }
+                ]
+            }
+        },
+         /*En RPSNextAppInsights hay que crear la prueba de disponibilidad*/
+  
+    /*Alertas BD*/
+   
+    /*Automation*/
+    {
+      "name": "Automation",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('automationTemplate')]"
+        },
+        "parameters": {
+          "customerName": {
+            "value": "[parameters('customerName')]"
+          },
+          "automationAccountName": {
+            "value": "rpsautomation"
+          },
+          "location": {
+            "value": "[variables('location')]"
+          }          
+        }        
+      },
+      "dependsOn": [      
+      ]
+    },
+  
     /*VPN*/
      {
       "name": "virtualNetwork",
