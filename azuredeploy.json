@@ -564,13 +564,41 @@
 /*  Vamos al servidor de sql de azure y copiamos el nombre del servidor*/
 /*  TEST: Reviar que la BD esta restaurada en el nivel que se contrato Ej: Standard-S1*/
 /*Hay que dar de alta al usuario pricipal de la suscripción como admin de sqlserver*/
-/*Hay que poner en el centro de backup una directiva de backup y una instancia de backup para las vm*/
+/*Hay que poner en el centro de backup una directiva de backup y una instancia de backup para las vm y bases de datos*/
+/*  Vamos al servidor de BD - Copias de seguridad y seleccionamos directivas de Backup*/
+/*  BDS:
+/*    En la BD de RPS PITR 7Dias, LTR 8 Semanas, en el resto solo PITR 7 días*/
+/*  VMS:*/
+/*    Vamos a la VM y seleccionamos Backup: Creamos un vault para el backup en el grupo de recursos rps*/
+/*    Editamos la directiva de copia de seguridad a DailyPolicy a las 10pm en UTC+1, conservando las instantaneas 2 dias. Retencion diaria 30 dias, retencion mensual, basado en dia para 2 meses el dia 1 del mes. */
 /*Hay que crear los grupos de acciones necesarios*/
 /*  Crear grupo de acciones AccionesPoolRPS, nombre para mostrar PoolRPS*/
 /*    Notificaciones, email para Xabi, Asier, Jorde y Aritz*/
 /*    Acciones:*/
 /*      Seleccionamos un runbook de automation de USUARIO*/
 /*      Seleccionamos Restart App Pools*/
+/*Hay que montar los siguientes procesos de automatiomn*/
+/*  En rpsautomation bajar a Cuentas de Ejecucion y dar a Crear cuenta de ejecucion de azure. Crear.*/
+/*  Ejecutar el script Update Automation Az Modules, pasando los parametros del grupo de recursos y el nombre de la cuenta de automation*/
+/*  Az.Accounts*/
+/*  Az.Sql*/
+/*  Az.KeyVault*/
+/*  Az.Compute*/
+/*  Az.Monitor*/
+/*  Azure*/
+/*  Hay que crear el runbook bacpacgeneration con el codigo de bacpacgeneration.ps1*/
+/*  En la cuenta de automation crear en variables una variable Customer -> Value: nombre cliente en minisculas.*/
+/*  Hay que programar la generacion del bacpac*/
+/*    Generacion bacpac - bacpacgeneration 1 vez al dia 21:00 */
+/*TEST:Probar los run book de automation
+StopVM, 
+StartVM,
+RestarAppPools
+bacpacgeneration
+/*Hay que rellenar en la hoja excel servidores_Nube_y_FTP en la pestaña azureClients*/
+/*todos los datos del nuevo cliente*/
+/*SE DEJA LA MAQUINA PARADA Y SE PASA EL CLIENTE VPN y el Certificado a Jorge para instalar RPS*/
+/*Una vez jorge a hecho la instalación*/
 /*Hay que montar las siguientes alertas*/
 /*  En RPSNextAppInsights hay que crear la prueba de disponibilidad*/
 /*    Creamos un elemento Application Insights con el nombre RPSNextAppInsights*/
@@ -585,18 +613,12 @@
 /*      TEST:Una vez creado deberia verse en verde*/
 /*    Alertas->Administrar reglas de alerta->rps healt-rpsnextappinsights*/
 /*      Hay que añadir el grupo de acciones AccionesPoolRPS*/
-/*Hay que montar los siguientes procesos de automatiomn*/
-/*  En rpsautomation bajar a Cuentas de Ejecucion y dar a Crear cuenta de ejecucion de azure. Crear.*/
-/*  Ejecutar el script Update Automation Az Modules, pasando los parametros del grupo de recursos y el nombre de la cuenta de automation*/
-/*  Az.Accounts*/
-/*  Az.Sql*/
-/*  Az.KeyVault*/
-/*  Az.Compute*/
-/*  Az.Monitor*/
-/*  Azure*/
-/*TEST:Probar los run bookc de 
-StopVM, 
-StartVM,
-RestarAppPools
-/*Hay que rellenar en la hoja excel servidores_Nube_y_FTP en la pestaña azureClients*/
-/*todos los datos del nuevo cliente*/
+/*Si el cliente no opera 24x7 hay que programar la ejecucion de los scripts de automation*/
+/*  InicioSinActualizacionRPS - Start VM 15min antes de la hora que quieren trabajar*/
+/*  InicioConActualizacionRPS - Start VM 15min antes de la hora del actualizador*/
+/*  ParadaRPS - Stop VM A la hora que quiene terminar de trabajar*/
+/*  InicioAlertasRPS - A la hora que comienzan a trabajar*/
+/*  ParadaAlertasRPS - Disable Rules 2min antes de la hora que terminan de trabajar*/
+/*TEST: Comprobar el mismo dia a partir de las 18 si la maquina se ha parado*/
+/*TEST: Comprobar si a la hora que quieren la maquina esta arrancada*/
+/*TEST: Ver si nos llegan alertas de disponibilidad y se solucionan solas.*/
