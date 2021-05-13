@@ -66,7 +66,7 @@ if(($connectionResultIbermatica))
         $filename = "/database.bacpac"
         $strUrl = $str1+$Customer+$filename
         Write-Output $strUrl
-        $deleteUrl = $strUrl + $SASToken
+        $deleteUrl = $strUrl + $sastoken
         #deletes previous files, if there are no files an error will appear
         Write-Output "Deleting previous files"
         $deleteIncidentResponse = Invoke-RestMethod -Method DELETE -Uri $deleteUrl
