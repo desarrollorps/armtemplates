@@ -541,10 +541,62 @@
   "outputs": {}
 }
 /*Tras subir la plantilla:*/
+/*Hay que poner en la ip publica del appgateway el dominio que tendrá*/
+/*TEST:Comprobar que hay acceso a la maquina virtual desde fuera con el dominio que hemos puesto*/
+/*Generar certificados para la VPN*/
+/*  Powershells>CreateCertificate.ps1 cambiando el parametro $customer*/
+/*  Ir al administrador de certificados de usuario, Personal y buscar CustomerIbermaticaP2SRootCert y CustomerIbermaticaP2SChildCert  */
+/*    Exportar el RootCert con clave privada, contraseña Ibermatica, en dir github azureclients\customer\certificados\VPNRoot.pfx*/
+/*    Exportar el RootCert sin clave privada, X.509 base 64, en dir github azureclients\customer\certificados\VPNRoot.cer*/
+/*    Exportar el ChildCert con clave privada, contraseña Ibermatica, en dir github azureclients\customer\certificados\VPNClient.pfx (esto se pasa a los usuarios)*/
+/*  En portal.azure.com ir a vpn-gatewaym configuracion de punto a sitio*/
+/*    Metemos un certificado nuevo*/
+/*    Copiamos el contenido del fichero VPNRoot.cer editado con el bloc de notas*/
+/*    Quitar el certificado P2SRootCert*/
+/*TEST:En el portal de azure, vpn-gateway, configuracion de punto a sitio, descargar cliente vpn*/
+/*  Hay que ver que se nos instala la VPN con el nombre correcto y que podemos conectarnos a la maquina 10.0.1.4*/
+/*  rpsadmin Ibermatica2020.*/
+/*  Copiamos le zip que hemos descargado donde los certificados y lo desbloqueamos. Ya que a un usuario/consultor hay */
+/*  que pasarle el zip y VPNClient.pfx*/
 /*Deben restaurarse las BDs, RPS, Session y workflows si fuera necesario*/
-/*Hay que poner en el appgateway el dominio que tendrá*/
+/*  Nos restauramos en nuestro equipo la BD a subir a azure*/
+/*  Click derecho en la BD->Tasks->Deploy database to azure sql y seguimos el asistente*/
+/*  Vamos al servidor de sql de azure y copiamos el nombre del servidor*/
+/*  TEST: Reviar que la BD esta restaurada en el nivel que se contrato Ej: Standard-S1*/
 /*Hay que dar de alta al usuario pricipal de la suscripción como admin de sqlserver*/
 /*Hay que poner en el centro de backup una directiva de backup y una instancia de backup para las vm*/
+/*Hay que crear los grupos de acciones necesarios*/
+/*  Crear grupo de acciones AccionesPoolRPS, nombre para mostrar PoolRPS*/
+/*    Notificaciones, email para Xabi, Asier, Jorde y Aritz*/
+/*    Acciones:*/
+/*      Seleccionamos un runbook de automation de USUARIO*/
+/*      Seleccionamos Restart App Pools*/
 /*Hay que montar las siguientes alertas*/
-  /*En RPSNextAppInsights hay que crear la prueba de disponibilidad*/
+/*  En RPSNextAppInsights hay que crear la prueba de disponibilidad*/
+/*    Creamos un elemento Application Insights con el nombre RPSNextAppInsights*/
+/*    Una vez creado vamos al punto disponibilidad y agregamos una prueba con el nombre RPS Health*/
+/*      SKU-Ping URL*/
+/*      URL:La url de rps hasta status (sin .html)*/
+/*      Habilitar reintentos:Si*/
+/*      Frecuencia de prueba: 5 minutos*/
+/*      Unicaciones de prueba: las que vienen por defecto*/
+/*      Criterio de exito:120segundos respuesta http:200 y marcar coincidencia de contenido*/
+/*        "IsRunning":true*/
+/*      TEST:Una vez creado deberia verse en verde*/
+/*    Alertas->Administrar reglas de alerta->rps healt-rpsnextappinsights*/
+/*      Hay que añadir el grupo de acciones AccionesPoolRPS*/
 /*Hay que montar los siguientes procesos de automatiomn*/
+/*  En rpsautomation bajar a Cuentas de Ejecucion y dar a Crear cuenta de ejecucion de azure. Crear.*/
+/*  Ejecutar el script Update Automation Az Modules, pasando los parametros del grupo de recursos y el nombre de la cuenta de automation*/
+/*  Az.Accounts*/
+/*  Az.Sql*/
+/*  Az.KeyVault*/
+/*  Az.Compute*/
+/*  Az.Monitor*/
+/*  Azure*/
+/*TEST:Probar los run bookc de 
+StopVM, 
+StartVM,
+RestarAppPools
+/*Hay que rellenar en la hoja excel servidores_Nube_y_FTP en la pestaña azureClients*/
+/*todos los datos del nuevo cliente*/
