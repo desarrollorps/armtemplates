@@ -598,6 +598,16 @@ bacpacgeneration
 /*Hay que rellenar en la hoja excel servidores_Nube_y_FTP en la pestaña azureClients*/
 /*todos los datos del nuevo cliente*/
 /*SE DEJA LA MAQUINA PARADA Y SE PASA EL CLIENTE VPN y el Certificado a Jorge para instalar RPS*/
+/*Alerta de BD*/
+/*  Hay que crear una nueva alerta, alertas -> nueva alerta*/
+/*  Nombre:DTU Usage greater than 90 perfect*/
+/*  Descripcion:Customer - Hay en la BD un pico de más del 90% de uso de DTUs*/
+/*  Grupo de acciones:Azure Desarrollo*/
+/*  Condicion-> Selecionamos la BD de RPS como recurso*/
+/*              Estatico*/
+/*              Mayor que - Promedio - 90*/
+/*              Granularidad 5 min, Frecuencia 1 min*/
+
 /*Una vez jorge a hecho la instalación*/
 /*Hay que montar las siguientes alertas*/
 /*  En RPSNextAppInsights hay que crear la prueba de disponibilidad*/
