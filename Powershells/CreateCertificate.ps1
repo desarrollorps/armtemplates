@@ -1,4 +1,4 @@
-$customer = "Finestra"
+$customer = "Demos"
 $rootcertname = "CN="+$customer+"IbermaticaP2SRootCert"
 $childcertname = "CN="+$customer+"IbermaticaP2SChildCert"
 $cert = New-SelfSignedCertificate -Type Custom -KeySpec Signature `

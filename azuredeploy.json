@@ -208,6 +208,32 @@
         
       }
     },
+    /*Automation*/
+    {
+      "name": "Automation",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('automationTemplate')]"
+        },
+        "parameters": {
+          "customerName": {
+            "value": "[parameters('customerName')]"
+          },
+          "automationAccountName": {
+            "value": "rpsautomation"
+          },
+          "location": {
+            "value": "[variables('location')]"
+          }          
+        }        
+      },
+      "dependsOn": [      
+      ]
+    },
+    //action grups
       {
           "type": "Microsoft.Insights/actionGroups",
           "apiVersion": "2019-03-01",
@@ -233,9 +259,62 @@
                 "name": "Email Jorge",
                 "emailAddress": "j.tamara@ibermatica.com",
                 "useCommonAlertSchema": true
+              },
+              {
+                "name": "Email Aritz",
+                "emailAddress": "a.argulo@ibermatica.com",
+                "useCommonAlertSchema": true
               }
             ]
           }
+        },
+        {
+          "type": "Microsoft.Insights/actionGroups",
+          "apiVersion": "2019-03-01",
+          "name": "AccionesPoolRPS",
+          "location": "Global",
+          
+          "properties": {
+            "groupShortName": "PoolRPS",
+            "enabled": true,
+            "emailReceivers": [
+              {
+                "name": "Email Asier",
+                "emailAddress": "a.ayestaran@ibermatica.com",
+                "useCommonAlertSchema": true
+
+              },
+              {
+                "name": "Email Xabi",
+                "emailAddress": "x.arrieta@ibermatica.com",
+                "useCommonAlertSchema": true
+              },
+              {
+                "name": "Email Jorge",
+                "emailAddress": "j.tamara@ibermatica.com",
+                "useCommonAlertSchema": true
+              },
+              {
+                "name": "Email Aritz",
+                "emailAddress": "a.argulo@ibermatica.com",
+                "useCommonAlertSchema": true
+              }
+            ]/*,            
+            "automationRunbookReceivers": [
+            {
+              "automationAccountId": "[reference('Automation').outputs.resourceID.value]",
+              "runbookName": "Restart AppPools",             
+              "isGlobalRunbook": false,
+              "name": "string",              
+              "useCommonAlertSchema": true,
+              "webhookResourceId":"",
+              "serviceUri":""
+            }
+            ]*/
+          },
+          "dependsOn":[
+            "[resourceId('Microsoft.Resources/deployments', 'Automation')]"
+          ]
         },
     /*VM*/
     {
@@ -450,31 +529,7 @@
   
     /*Alertas BD*/
    
-    /*Automation*/
-    {
-      "name": "Automation",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2018-05-01",
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('automationTemplate')]"
-        },
-        "parameters": {
-          "customerName": {
-            "value": "[parameters('customerName')]"
-          },
-          "automationAccountName": {
-            "value": "rpsautomation"
-          },
-          "location": {
-            "value": "[variables('location')]"
-          }          
-        }        
-      },
-      "dependsOn": [      
-      ]
-    },
+    
   
     /*VPN*/
      {
@@ -572,8 +627,8 @@
 /*    Vamos a la VM y seleccionamos Backup: Creamos un vault para el backup en el grupo de recursos rps*/
 /*    Editamos la directiva de copia de seguridad a DailyPolicy a las 10pm en UTC+1, conservando las instantaneas 2 dias. Retencion diaria 30 dias, retencion mensual, basado en dia para 2 meses el dia 1 del mes. */
 /*Hay que crear los grupos de acciones necesarios*/
-/*  Crear grupo de acciones AccionesPoolRPS, nombre para mostrar PoolRPS*/
-/*    Notificaciones, email para Xabi, Asier, Jorde y Aritz*/
+/*  Ir al grupo de acciones AccionesPoolRPS, nombre para mostrar PoolRPS*/
+/*    Deberian estar configurados los emails de Xabi, Asier, Jorge y Aritz*/
 /*    Acciones:*/
 /*      Seleccionamos un runbook de automation de USUARIO*/
 /*      Seleccionamos Restart App Pools*/
